@@ -1,0 +1,62 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.js'
+      - 'Dockerfile'
+      - 'src/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to ACR
+        run: az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/my-microservice:${{ github.sha }} .
+          
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.41.0/trivy_0.41.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.41.0_Linux-64bit.deb
+
+      - name: Scan Docker Image with Trivy
+        run: |
+          trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }}
+
+      - name: Push Docker Image
+        run: |
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }}
+
+      - name: Set Kubernetes Context
+        uses: azure/aks-set-context@v3
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
+          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+
+      - name: Deploy to AKS
+        uses: azure/k8s-deploy@v1
+        with:
+          manifests: |
+            k8s/deployment.yaml
+            k8s/service.yaml
+          images: |
+            ${{ secrets.ACR_NAME }}.azurecr.io/my-microservice:${{ github.sha }}
+          namespace: default
