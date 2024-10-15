@@ -27,7 +27,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/my-microservice:${{ github.sha }} .
+          docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }} .
           
       - name: Install Trivy
         run: |
@@ -58,5 +58,5 @@ jobs:
             k8s/deployment.yaml
             k8s/service.yaml
           images: |
-            ${{ secrets.ACR_NAME }}.azurecr.io/my-microservice:${{ github.sha }}
+            ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }}
           namespace: default
