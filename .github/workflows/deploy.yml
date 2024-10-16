@@ -22,6 +22,11 @@ jobs:
         run: az acr login --name ${{ secrets.ACR_NAME }}
 
       - name: Build Docker Image
+        env:
+          COSMOS_DB_ENDPOINT: ${{ secrets.COSMOS_DB_ENDPOINT }}
+          COSMOS_DB_KEY: ${{ COSMOS_DB_KEY }}
+          COSMOS_DB_DATABASE: ${{ COSMOS_DB_DATABASE }}
+          COSMOS_DB_CONTAINER: ${{ COSMOS_DB_CONTAINER }}
         run: |
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }} .
           
