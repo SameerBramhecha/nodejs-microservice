@@ -25,16 +25,16 @@ jobs:
         run: |
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }} .
           
-      # - name: Install Trivy
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y wget
-      #     wget https://github.com/aquasecurity/trivy/releases/download/v0.41.0/trivy_0.41.0_Linux-64bit.deb
-      #     sudo dpkg -i trivy_0.41.0_Linux-64bit.deb
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.41.0/trivy_0.41.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.41.0_Linux-64bit.deb
 
-      # - name: Scan Docker Image with Trivy
-      #   run: |
-      #     trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }}
+      - name: Scan Docker Image with Trivy
+        run: |
+          trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }}
 
       - name: Push Docker Image
         run: |
@@ -47,13 +47,13 @@ jobs:
           cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
 
-      - name: Apply environment variables
-        run: |
-          kubectl set env deployment/nodejs-microservice \
-            COSMOS_DB_ENDPOINT=${{ secrets.COSMOS_DB_ENDPOINT }} \
-            COSMOS_DB_KEY=${{ secrets.COSMOS_DB_KEY }} \
-            COSMOS_DB_DATABASE=${{ secrets.COSMOS_DB_DATABASE }} \
-            COSMOS_DB_CONTAINER=${{ secrets.COSMOS_DB_CONTAINER }}
+      # - name: Apply environment variables
+      #   run: |
+      #     kubectl set env deployment/nodejs-microservice \
+      #       COSMOS_DB_ENDPOINT=${{ secrets.COSMOS_DB_ENDPOINT }} \
+      #       COSMOS_DB_KEY=${{ secrets.COSMOS_DB_KEY }} \
+      #       COSMOS_DB_DATABASE=${{ secrets.COSMOS_DB_DATABASE }} \
+      #       COSMOS_DB_CONTAINER=${{ secrets.COSMOS_DB_CONTAINER }}
 
       - name: Deploy to AKS
         uses: azure/k8s-deploy@v1
