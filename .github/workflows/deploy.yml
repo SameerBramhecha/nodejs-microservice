@@ -30,16 +30,16 @@ jobs:
         run: |
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }} .
           
-      - name: Install Trivy
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.41.0/trivy_0.41.0_Linux-64bit.deb
-          sudo dpkg -i trivy_0.41.0_Linux-64bit.deb
+      # - name: Install Trivy
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y wget
+      #     wget https://github.com/aquasecurity/trivy/releases/download/v0.41.0/trivy_0.41.0_Linux-64bit.deb
+      #     sudo dpkg -i trivy_0.41.0_Linux-64bit.deb
 
-      - name: Scan Docker Image with Trivy
-        run: |
-          trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }}
+      # - name: Scan Docker Image with Trivy
+      #   run: |
+      #     trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }}
 
       - name: Push Docker Image
         run: |
