@@ -1,7 +1,8 @@
 const express = require('express');
-const {CosmosClient} = require('@azure/cosmos')
-const dotenv = require('dotenv')
-dotenv.config()
+const { CosmosClient } = require('@azure/cosmos');
+const dotenv = require('dotenv');
+dotenv.config();
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -22,6 +23,11 @@ const client = new CosmosClient({
 const database = client.database(process.env.COSMOS_DB_DATABASE);
 const container = database.container(process.env.COSMOS_DB_CONTAINER);
 
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
 // Another example endpoint
 app.post('/data', (req, res) => {
   const data = req.body;
@@ -35,26 +41,30 @@ app.post('/data', (req, res) => {
 app.get('/items', async (req, res) => {
     try {
         const { resources } = await container.items.readAll().fetchAll();
-        res.status(201).json(resources);
+        res.status(200).json(resources);
     } catch (error) {
-        res.status(500).send(error);
+        console.error('Error fetching items:', error);
+        res.status(500).send({ message: 'Error fetching items', error: error.message });
     }
 });
-
 
 // POST endpoint to add a new item to the collection
 app.post('/items', async (req, res) => {
     const newItem = req.body;  // Get the new item from the request body
+
+    // Example validation (adjust according to your schema)
+    if (!newItem.id || !newItem.name) {
+        return res.status(400).send('Item must have id and name fields');
+    }
 
     try {
         const { resource: createdItem } = await container.items.create(newItem);
         res.status(201).json(createdItem);  // Respond with the created item
     } catch (error) {
         console.error('Error creating item:', error);
-        res.status(500).send(error);
+        res.status(500).send({ message: 'Error creating item', error: error.message });
     }
 });
-
 
 // Start the server
 app.listen(port, () => {
