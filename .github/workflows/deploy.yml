@@ -22,11 +22,6 @@ jobs:
         run: az acr login --name ${{ secrets.ACR_NAME }}
 
       - name: Build Docker Image
-        env:
-          COSMOS_DB_ENDPOINT: ${{ secrets.COSMOS_DB_ENDPOINT }}
-          COSMOS_DB_KEY: ${{ secrets.COSMOS_DB_KEY }}
-          COSMOS_DB_DATABASE: ${{ secrets.COSMOS_DB_DATABASE }}
-          COSMOS_DB_CONTAINER: ${{ secrets.COSMOS_DB_CONTAINER }}
         run: |
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/nodejs-microservice:${{ github.sha }} .
           
@@ -51,6 +46,14 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+
+      - name: Apply environment variables
+        run: |
+          kubectl set env deployment/nodejs-microservice \
+            COSMOS_DB_ENDPOINT=${{ secrets.COSMOS_DB_ENDPOINT }} \
+            COSMOS_DB_KEY=${{ secrets.COSMOS_DB_KEY }} \
+            COSMOS_DB_DATABASE=${{ secrets.COSMOS_DB_DATABASE }} \
+            COSMOS_DB_CONTAINER=${{ secrets.COSMOS_DB_CONTAINER }}
 
       - name: Deploy to AKS
         uses: azure/k8s-deploy@v1
